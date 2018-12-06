@@ -118,6 +118,11 @@ def largestNonInfiniteArea(areas, infinite_areas):
         return max_size
     return reduce(aux, areas.items(), 0)
 
+def getSumsForCoordsInRange(coordinates, all_coords, range_of_c):
+    def sum_map(el):
+        return reduce(lambda acc, x: acc + manhattanDistance(x, el), coordinates, 0)
+    return map(sum_map, all_coords)
+
 def part1(filename):
     coordinates = getCoords(filename)
     range_of_c = rangeOfCoordinates(coordinates)
@@ -127,5 +132,17 @@ def part1(filename):
     max_size = largestNonInfiniteArea(areas, infinite_areas)
     return max_size
 
+def part2(filename, size):
+    coordinates = getCoords(filename)
+    range_of_c = rangeOfCoordinates(coordinates)
+    all_coords = allCoordinatesInRange(range_of_c)
+    sums_of_distance_to_coords = getSumsForCoordsInRange(coordinates, all_coords, range_of_c)
+    size_of_area = reduce(
+        lambda acc, sum: acc + 1 if sum < size else acc,
+        sums_of_distance_to_coords,
+        0
+    )
+    return size_of_area
 
 print(part1('day6/input'))
+print(part2('day6/input', 10000))
