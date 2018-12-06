@@ -21,28 +21,19 @@ def getLines(filename):
     return [line.strip() for line in f.readlines()]
 
 def removeLetterAtX(x):
-    def cloture(word):
+    def closure(word):
         return word[:x] + word[x+1:]
-    return cloture
+    return closure
 
 def findDuplicates(enumerable):
-    def compare(acc, element):
-        duplicates, set = acc
-        if element in set:
+    def aux(acc, element):
+        duplicates, seen = acc
+        if element in seen:
             duplicates.add(element)
-        set.add(element)
-        return (duplicates, set)
-    return reduce(compare, enumerable, (set(), set()))
+        seen.add(element)
+        return (duplicates, seen)
+    return reduce(aux, enumerable, (set(), set()))
 
-def lettersRemaining(ids):
-    for x in range(0, len(ids[0])):
-        modifiedIds = map(removeLetterAtX(x) , ids)
-        duplicates, _ = findDuplicates(modifiedIds)
-        if len(duplicates) > 0:
-            return duplicates.pop()
-    return None
-
-#same but pure function
 def lettersRemaining(ids):
     def tryWithPosition(x):
         modifiedIds = map(removeLetterAtX(x) , ids)
