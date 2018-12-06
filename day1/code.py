@@ -15,11 +15,42 @@
 # -1, -2, -3 results in -6
 # Starting with a frequency of zero, what is the resulting frequency after all of the changes in frequency have been applied?
 
-f = open('day1/input')
+# --- Part Two ---
+# You notice that the device repeats the same frequency change list over and over. To calibrate the device, you need to find the first frequency it reaches twice.
+#
+# For example, using the same list of changes above, the device would loop as follows:
+#
+# Current frequency  0, change of +1; resulting frequency  1.
+# Current frequency  1, change of -2; resulting frequency -1.
+# Current frequency -1, change of +3; resulting frequency  2.
+# Current frequency  2, change of +1; resulting frequency  3.
+# (At this point, the device continues from the start of the list.)
+# Current frequency  3, change of +1; resulting frequency  4.
+# Current frequency  4, change of -2; resulting frequency  2, which has already been seen.
+# In this example, the first frequency reached twice is 2. Note that your device might need to repeat its list of frequency changes many times before a duplicate frequency is found, and that duplicates might be found while in the middle of processing the list.
+#
+# Here are other examples:
+#
+# +1, -1 first reaches 0 twice.
+# +3, +3, +4, -2, -4 first reaches 10 twice.
+# -6, +3, +8, +5, -6 first reaches 5 twice.
+# +7, +7, -2, -7, -4 first reaches 14 twice.
+# What is the first frequency your device reaches twice?
+from functools import reduce
+
+def getLines(filename):
+    f = open(filename)
+    return [line.strip() for line in f.readlines()]
+
+operations = getLines('day1/input')
+print(reduce(lambda acc, op : acc + int(op), operations, 0))
+
 acc = 0
-op =  f.readline().strip()
-while len(op) > 0:
+idx = 0
+freqs = set()
+while not acc in freqs:
+    freqs.add(acc)
+    op = operations[idx]
     acc += int(op)
-    op =  f.readline().strip()
-    print(acc)
+    idx = (idx + 1) % len(operations)
 print(acc)
