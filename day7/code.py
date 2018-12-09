@@ -36,10 +36,7 @@
 #
 # In what order should the steps in your instructions be completed?
 
-from functools import reduce, cmp_to_key
-
-import collections
-# import math
+from functools import reduce
 import re
 
 def extractStepPair(line):
