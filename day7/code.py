@@ -79,16 +79,9 @@ def getTimeWithBaseTime(baseTime):
         return ord(step) - ord('A') + baseTime + 1
     return closure
 
-def part1(filename):
-    step_pairs = getStepPairs(filename)
-    steps = getSteps(filename)
-    order = getOrder(steps, step_pairs)
-    print(order)
-    return order
-
-def allTasksFinished(workers, steps):
-    time_left = sum([time_left for _, time_left in workers])
-    return len(steps) + time_left == 0
+def allWorkersIdle(workers):
+    busy_workers = sum((1 for step, _ in workers if step is not None))
+    return busy_workers == 0
 
 def workersToString(workers):
     def format(worker):
@@ -123,8 +116,25 @@ def assignTasksToWorkers(available, workers, getTime):
 def timeForwardOneSec(workers):
     return [(step, time_left - 1 if time_left > 0 else 0) for (step, time_left) in workers]
 
-# def moveInTime():
+def getWorkTime(workers, steps, step_pairs, getTime):
+    if allWorkersIdle(workers) and len(steps) == 0:
+        return -1
+    else:
+        finished_tasks, workers = freeWorkersFromFinishedTasks(workers)
+        step_pairs = [(a, b) for (a, b) in step_pairs if a not in finished_tasks]
+        available = availableSteps(steps, step_pairs)
+        assigned_tasks, available, workers = assignTasksToWorkers(available, workers, getTime)
+        steps = {step for step in steps if step not in assigned_tasks}
+        # print(workersToString(workers))
+        workers = timeForwardOneSec(workers)
+        return 1 + getWorkTime(workers, steps, step_pairs, getTime)
 
+def part1(filename):
+    step_pairs = getStepPairs(filename)
+    steps = getSteps(filename)
+    order = getOrder(steps, step_pairs)
+    print(order)
+    return order
 
 def part2(filename, base_time, nb_of_workers):
     steps = getSteps(filename)
@@ -133,21 +143,12 @@ def part2(filename, base_time, nb_of_workers):
     # step_times = {step: getTime(step) for step in steps}
     workers = [(None, 0) for _ in range(0, nb_of_workers)]
 
-    time = 0
-    while not allTasksFinished(workers, steps):
-        finished_tasks, workers = freeWorkersFromFinishedTasks(workers)
-        step_pairs = [(a, b) for (a, b) in step_pairs if a not in finished_tasks]
-        available = availableSteps(steps, step_pairs)
-        assigned_tasks, available, workers = assignTasksToWorkers(available, workers, getTime)
-        steps = {step for step in steps if step not in assigned_tasks}
-        print('{}: {}'.format(time, workersToString(workers)))
-        workers = timeForwardOneSec(workers)
-        time += 1
+    time = getWorkTime(workers, steps, step_pairs, getTime)
+    print(time)
     return time
 
-
-# print(part1('day7/input_test') == 'CABDFE')
-# print(part1('day7/input') == 'CFMNLOAHRKPTWBJSYZVGUQXIDE')
+print(part1('day7/input_test') == 'CABDFE')
+print(part1('day7/input') == 'CFMNLOAHRKPTWBJSYZVGUQXIDE')
 
 print(part2('day7/input_test', 0, 2) == 15)
 print(part2('day7/input', 60, 5) == 971)
