@@ -1,3 +1,5 @@
+from functools import reduce
+
 def quicksort(list, cmp=lambda x, y: x - y):
     if len(list) <= 1:
         return list
