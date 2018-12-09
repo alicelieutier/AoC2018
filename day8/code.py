@@ -1,40 +1,37 @@
 import re
 
-def generateNumber(filename):
-    f = open(filename)
-    numbers = re.compile('[0-9]+').findall(f.read())
+def generate_number(filename):
+    file = open(filename)
+    numbers = re.compile('[0-9]+').findall(file.read())
     return (int(n) for n in numbers)
 
-def consumeNode(gen):
+def consume_node(gen):
     child_count = next(gen)
     metadata_count = next(gen)
-    children = [consumeNode(gen) for i in range(0, child_count)]
+    children = [consume_node(gen) for i in range(0, child_count)]
     metadata = [next(gen) for i in range(0, metadata_count)]
     return (children, metadata)
 
 def value(node):
     children, metadata = node
-    if len(children) == 0:
+    if not children:
         return sum(metadata)
-    else:
-        return sum((value(children[index-1]) for index in metadata if index - 1 < len(children)))
+    return sum((value(children[index-1]) for index in metadata if index - 1 < len(children)))
 
-def sumAllMetadata(node):
+def sum_all_metadata(node):
     children, metadata = node
-    return sum(metadata) + sum((sumAllMetadata(child) for child in children))
+    return sum(metadata) + sum((sum_all_metadata(child) for child in children))
 
 def part1(filename):
-    gen = generateNumber(filename)
-    root = consumeNode(gen)
-    metadata_sum = sumAllMetadata(root)
-    print(metadata_sum)
+    gen = generate_number(filename)
+    root = consume_node(gen)
+    metadata_sum = sum_all_metadata(root)
     return metadata_sum
 
 def part2(filename):
-    gen = generateNumber(filename)
-    root = consumeNode(gen)
+    gen = generate_number(filename)
+    root = consume_node(gen)
     result = value(root)
-    print(result)
     return result
 
 print(part1('day8/input_test') == 138)

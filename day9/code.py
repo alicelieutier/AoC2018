@@ -1,29 +1,26 @@
 from functools import reduce
 import collections
 
-def placeMarble(marble, current_marble, marbles):
+def place_marble(marble, current_marble, marbles):
     new_place = (current_marble + 2) % len(marbles)
     marbles.insert(new_place, marble)
     return new_place, marbles
 
-def removeMarble(current_marble, marbles):
+def remove_marble(current_marble, marbles):
     index_to_remove = (current_marble - 7) % len(marbles)
     marble = marbles.pop(index_to_remove)
     return index_to_remove, marble, marbles
 
 def part1(nb_of_players, highest_marble):
-    marbles = [0]
-    current_marble = 0 #index
-
     def play(acc, marble):
         marbles, scores, current_marble, current_player, extra = acc
         if marble % 23 == 0:
-            current_marble, extra_marble, marbles = removeMarble(current_marble, marbles)
+            current_marble, extra_marble, marbles = remove_marble(current_marble, marbles)
             scores.setdefault(current_player, 0)
             scores[current_player] += (marble + extra_marble)
             current_player = (current_player + 1) % nb_of_players
         else: # standard case
-            current_marble, marbles = placeMarble(marble, current_marble, marbles)
+            current_marble, marbles = place_marble(marble, current_marble, marbles)
             current_player = (current_player + 1) % nb_of_players
         return marbles, scores, current_marble, current_player, extra
 
@@ -36,68 +33,67 @@ def part1(nb_of_players, highest_marble):
     highest_score = max(scores.values())
     return highest_score
 
-
 # using a linked list for part 2 to make the algo more linear-ish
 Marble = collections.namedtuple(
     'Marble',
-    ['prev', 'next']
+    ['prevm', 'nextm']
 )
 
-def findPlace(current_marble, marbles, delta):
-    prev, next = None, None
+def find_place(current_marble, marbles, delta):
+    prevm, nextm = None, None
     if delta == 0:
-        prev = current_marble
-        next = marbles[current_marble].next
-        return prev, next
-    elif delta > 0:
-        return findPlace(marbles[current_marble].next, marbles, delta - 1)
-    else: # delta < 0
-        return findPlace(marbles[current_marble].prev, marbles, delta + 1)
+        prevm = current_marble
+        nextm = marbles[current_marble].nextm
+        return prevm, nextm
+    if delta > 0:
+        return find_place(marbles[current_marble].nextm, marbles, delta - 1)
+    # delta < 0
+    return find_place(marbles[current_marble].prevm, marbles, delta + 1)
 
-def insertInList(new_marble, prev, next, marbles):
-    marbles[new_marble] = Marble(prev, next)
-    marbles[prev] = Marble(marbles[prev].prev, new_marble)
-    marbles[next] = Marble(new_marble, marbles[next].next)
+def insert_in_list(new_marble, prevm, nextm, marbles):
+    marbles[new_marble] = Marble(prevm, nextm)
+    marbles[prevm] = Marble(marbles[prevm].prevm, new_marble)
+    marbles[nextm] = Marble(new_marble, marbles[nextm].nextm)
     return marbles
 
-def removeFromList(marble_to_remove, marbles):
-    prev, next = marbles.pop(marble_to_remove)
-    marbles[prev] = Marble(marbles[prev].prev, next)
-    marbles[next] = Marble(prev, marbles[next].next)
-    return marbles, next
+def remove_from_list(marble_to_remove, marbles):
+    prevm, nextm = marbles.pop(marble_to_remove)
+    marbles[prevm] = Marble(marbles[prevm].prevm, nextm)
+    marbles[nextm] = Marble(prevm, marbles[nextm].nextm)
+    return marbles, nextm
 
-def genPart2():
+def gen_part2():
     marbles = {0: Marble(0, 0)}
     current_marble = 0
     new_marble = 1
     while True:
-        # print('{}, {}'.format(new_marble, listToString(marbles, current_marble)))
+        # print('{}, {}'.format(new_marble, list_to_string(marbles, current_marble)))
         if new_marble % 23 == 0:
-            marble_to_remove, _ = findPlace(current_marble, marbles, -7)
-            marbles, current_marble = removeFromList(marble_to_remove, marbles)
+            marble_to_remove, _ = find_place(current_marble, marbles, -7)
+            marbles, current_marble = remove_from_list(marble_to_remove, marbles)
             yield new_marble + marble_to_remove
         else:
-            prev, next = findPlace(current_marble, marbles, 1)
-            marbles = insertInList(new_marble, prev, next, marbles)
+            prevm, nextm = find_place(current_marble, marbles, 1)
+            marbles = insert_in_list(new_marble, prevm, nextm, marbles)
             current_marble = new_marble
         new_marble += 1
 
 # debug
-def listToString(marbles, start):
-    def readList(marbles, start):
+def list_to_string(marbles, start):
+    def read_list(marbles, start):
         yield start
         current = marbles[start].next
         while current != start:
             yield current
             current = marbles[current].next
-    return '->'.join([str(m) for m in readList(marbles, start)])
+    return '->'.join([str(m) for m in read_list(marbles, start)])
 
 def part2(nb_of_players, highest_marble):
-    g = genPart2()
-    players = [0 for i in range(nb_of_players)]
+    gen_score = gen_part2()
+    players = [0 for _ in range(nb_of_players)]
     current_player = 0
-    for i in range(23, highest_marble + 1, 23):
-        score = next(g)
+    for _ in range(23, highest_marble + 1, 23):
+        score = next(gen_score)
         players[current_player] += score
         current_player = (current_player + 23) % nb_of_players
     highest_score = max(players)
