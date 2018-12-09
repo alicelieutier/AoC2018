@@ -17,13 +17,10 @@ def part1(nb_of_players, highest_marble):
     def play(acc, marble):
         marbles, scores, current_marble, current_player, extra = acc
         if marble % 23 == 0:
-            scores.setdefault(current_player, 0)
-            scores[current_player] += marble
-            extra = True
-        if extra is True:
-            extra = False
             current_marble, extra_marble, marbles = removeMarble(current_marble, marbles)
-            scores[current_player] += extra_marble
+
+            scores.setdefault(current_player, 0)
+            scores[current_player] += (marble + extra_marble)
             current_player = (current_player + 1) % nb_of_players
         else: # standard case
             current_marble, marbles = placeMarble(marble, current_marble, marbles)
@@ -32,7 +29,7 @@ def part1(nb_of_players, highest_marble):
 
     _, scores, _, _, _ = reduce(
         play,
-        range(1, highest_marble),
+        range(1, highest_marble + 1),
         ([0], {}, 0, 0, False)
     )
 
