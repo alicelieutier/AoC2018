@@ -1,5 +1,3 @@
-from functools import reduce
-import collections
 import re
 
 def generateNumber(filename):
