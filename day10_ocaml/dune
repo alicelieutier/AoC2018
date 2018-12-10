@@ -1,0 +1,5 @@
+;; run this using
+;;  dune exec ./day10_ocaml/code.exe
+(executable
+ (name code)
+ (libraries core stb_image_write))
