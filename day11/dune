@@ -1,0 +1,5 @@
+;; run this using
+;;  dune exec ./day11/code.exe
+(executable
+ (name code)
+ (libraries core))
