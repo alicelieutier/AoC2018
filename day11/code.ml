@@ -98,8 +98,7 @@ let find_max_power cs size =
   let power, position = List.fold pairs ~f: aux ~init: (0, (1, 1)) in
 power, position
   
-let find_max_power_any_size serial =
-  let cs = cumulative_weights serial in
+let find_max_power_any_size cs =
   let sizes_to_try = List.rev (range 3 300) in
   let aux (max_sum, identifier) size =
     let power, (x, y) = find_max_power cs size in
@@ -134,31 +133,29 @@ let test_max_power_slow serial expected_value =
   Format.printf ".";
 ()
   
-let test_area_sum (serial, top_left, bottom_right) expected_value =
-  let cs = cumulative_weights serial in
+let test_area_sum (cs, top_left, bottom_right) expected_value =
   let sum = area_sum cs top_left bottom_right in
   let error = Format.asprintf "Area sum for tl %a to br %a" pair_pp top_left pair_pp bottom_right in
   assert_equal Int.pp error sum expected_value;
   Format.printf ".";
 ()
 
-let test_find_max_power (serial, size) expected_value =
-  let cs = cumulative_weights serial in
+let test_find_max_power (cs, size) expected_value =
   let max_power, _ = find_max_power cs size in
   let error = (Format.sprintf "Highest power for serial %d and size %d" serial size) in
   assert_equal Int.pp error max_power expected_value;
   Format.printf ".";
 ()
 
-let test_any_size_max_power serial expected_value =
-  let max_power, _ = find_max_power_any_size serial in
+let test_any_size_max_power cs expected_value =
+  let max_power, _ = find_max_power_any_size cs in
   let error = (Format.sprintf "Highest power for serial %d (square of any size)" serial) in
   assert_equal Int.pp error max_power expected_value;
   Format.printf ".";
 ()
 
-let test_any_size_identifier serial expected_identifier =
-  let _, identifier = find_max_power_any_size serial in
+let test_any_size_identifier cs expected_identifier =
+  let _, identifier = find_max_power_any_size cs in
   let error = (Format.sprintf "Highest any size identifier for serial %d" serial) in
   assert_equal triple_pp error identifier expected_identifier;
   Format.printf ".";
@@ -176,12 +173,15 @@ let tests =
   test_max_power_slow 42 30;
 
   (* part 2 *)
-  test_area_sum (18, (33, 45), (35, 47)) 29;
-  test_find_max_power (18, 3) 29;
-  test_any_size_max_power 18 113;
-  test_any_size_identifier 18 (90,269,16);
-  test_any_size_max_power 42 119;
-  test_any_size_identifier 42 (232,251,12);
+  let cs18 = cumulative_weights 18 in
+  let cs42 = cumulative_weights 42 in
+
+  test_area_sum (cs18, (33, 45), (35, 47)) 29;
+  test_find_max_power (cs18, 3) 29;
+  test_any_size_max_power cs18 113;
+  test_any_size_identifier cs18 (90,269,16);
+  test_any_size_max_power cs42 119;
+  test_any_size_identifier cs42 (232,251,12);
   Format.printf "@.";
 ()
 
@@ -190,7 +190,8 @@ let () =
   let power, position = find_max_power_3x3_slow 2568 in
   Format.printf "power %d@." power;
   Format.printf "position %a@." pair_pp position;
-  let power, identifier = find_max_power_any_size 2568 in
+  let cs2568 = cumulative_weights 2568 in
+  let power, identifier = find_max_power_any_size cs2568 in
   Format.printf "power %d@." power;
   Format.printf "position %a@." triple_pp identifier;
 ()
