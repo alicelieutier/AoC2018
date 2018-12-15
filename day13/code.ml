@@ -34,9 +34,20 @@ let show_map_with_carts carts matrix =
   Format.eprintf "@\n%a@." (pp_matrix (fun f c -> Format.fprintf f "%c" c)) map;
 ()
 
+
+module IntPairSet = Set.Make (struct
+  type t = int * int[@@deriving compare,sexp]
+end)
+
+
 let show_carts carts = 
   let show_cart {x; y; direction; _} = (Format.printf "%d,%d going %s@." y x (string_of_direction direction)) in
   List.iter carts ~f: show_cart;
+()
+
+let show_cp cp = 
+  let show_cart (x, y) = (Format.printf "%d,%d@." y x) in
+  IntPairSet.iter cp ~f: show_cart;
 ()
 
 let separate_carts_and_line carts line x =
@@ -63,10 +74,6 @@ let  create_matrix_from_file filename =
   in
   let carts = List.foldi lines ~f: aux ~init: [] in
 matrix, carts
-
-module IntPairSet = Set.Make (struct
-  type t = int * int[@@deriving compare,sexp]
-end)
 
 let next_pos_for_direction (x, y) = function 
 | East -> (x, y + 1)
@@ -114,7 +121,7 @@ let move_once matrix cart_positions carts =
       Error (new_x, new_y)
     else
     let cart_positions = IntPairSet.remove cart_positions (old_x, old_y) in
-    let  cart_positions = IntPairSet.add cart_positions (new_x, new_y) in
+    let cart_positions = IntPairSet.add cart_positions (new_x, new_y) in
       Ok (cart_positions, new_cart :: carts)
   in
   let sorted_carts = List.sort ~compare: (fun {x = ax; y = ay; _} {x = bx; y = by; _} -> if ax = bx then ay - by else ax - bx) carts in
@@ -123,15 +130,56 @@ List.fold_result sorted_carts ~f: next_state ~init: (cart_positions, [])
 let move nb_of_times matrix cart_positions carts =
   let aux (cart_positions, carts) second =
     let result = move_once matrix cart_positions carts in
-    match result with
-    | Ok (cart_positions, carts) -> Ok (cart_positions, carts)
-    | Error (x, y) -> Error (second + 1, x, y)
+    Result.map_error result ~f: (fun (x, y) -> (second + 1, x, y))
   in
   let result = List.fold_result (range 0 nb_of_times) ~f: aux ~init: (cart_positions, carts) in
 match result with
 | Ok _ -> Format.printf "No crash after %d seconds@." nb_of_times
 | Error (second, x, y) -> Format.printf "Crash after %d seconds: position %d,%d@." second y x
 
+
+(* part 2 *)
+
+let move_once_safe matrix cart_positions carts =
+  let next_state (cart_positions, carts, positions_to_remove) cart = 
+    let {x = old_x; y = old_y; _} = cart in
+    if IntPairSet.mem positions_to_remove (old_x, old_y) then
+      cart_positions, carts, IntPairSet.remove positions_to_remove (old_x, old_y)
+    else 
+    let new_cart = move_one_cart matrix cart in
+    let {x = new_x; y = new_y; _} = new_cart in
+
+    if IntPairSet.mem cart_positions (new_x, new_y) then (
+
+      let cart_positions = IntPairSet.remove cart_positions (new_x, new_y) in
+      let cart_positions = IntPairSet.remove cart_positions (old_x, old_y) in
+
+      let l1 = List.length carts in
+      let carts = List.filter carts ~f: (fun {x; y; _} -> (x, y) <> (new_x, new_y)) in
+      let positions_to_remove = if List.length carts = l1 then (IntPairSet.add positions_to_remove (new_x, new_y)) else positions_to_remove in
+      cart_positions, carts, positions_to_remove
+    )
+    else (
+      let cart_positions = IntPairSet.remove cart_positions (old_x, old_y) in
+      let cart_positions = IntPairSet.add cart_positions (new_x, new_y) in
+      cart_positions, new_cart :: carts, positions_to_remove
+    )
+  in
+  let sorted_carts = List.sort ~compare: (fun {x = ax; y = ay; _} {x = bx; y = by; _} -> if ax = bx then ay - by else ax - bx) carts in
+List.fold sorted_carts ~f: next_state ~init: (cart_positions, [], IntPairSet.empty)
+
+
+let move_safe nb_of_times matrix cart_positions carts =
+  let aux (cart_positions, carts) second =
+    let cart_positions, carts, _ = move_once_safe matrix cart_positions carts in
+    if (IntPairSet.length cart_positions) < 2 then
+    Error (second + 1, cart_positions, carts)
+    else Ok (cart_positions, carts)
+  in
+  let result = List.fold_result (range 0 nb_of_times) ~f: aux ~init: (cart_positions, carts) in
+match result with
+| Ok (cp, carts) -> Format.printf "OK (%d carts left)@." (IntPairSet.length cp); carts
+| Error (second, cp, carts) -> (Format.printf "%d cart left after %d seconds@." (IntPairSet.length cp) second; show_cp cp; carts)
 
 let () =
   let matrix, carts = create_matrix_from_file "day13/input" in
@@ -143,4 +191,7 @@ let () =
   move 2000 matrix cart_positions carts;
 
   (* part 2 *)
+  let cart_positions = IntPairSet.of_list (List.map carts ~f: (fun {x; y; _} -> (x, y))) in
+  let carts = move_safe 50000 matrix cart_positions carts in
+  show_carts carts;
 ()  
