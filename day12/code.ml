@@ -93,6 +93,6 @@ let () =
   Format.printf "result at 200: %d@." result_200;
   Format.printf "difference between 201 and 200: %d@." (result_201 - result_200);
   Format.printf "difference between 202 and 201: %d@." (result_202 - result_201);
-  let final_result = (result_200 + (50000000000 - 200) * 34) in
+  let final_result = (result_200 + (50000000000 - 200) * (result_202 - result_201)) in
   Format.printf "final result: %d@." final_result;
 ()
