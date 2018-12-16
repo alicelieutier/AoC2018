@@ -47,13 +47,22 @@ let process_n_times n recipes length e1 e2 =
   in
   List.fold (range 0 n) ~f: aux ~init: (recipes, length, e1, e2)
 
+let string_of_int_arr array =
+  String.concat (List.map ~f: string_of_int (Array.to_list array))
+
+let scan_recipes_for_sequence recipe_string sequence =
+  let pos = String.substr_index recipe_string ~pattern: sequence in
+  match pos with
+  | Some i -> Format.printf "%s found at position = %d@." sequence i; ()
+  | _ -> failwith (Format.sprintf "pattern %s not found" sequence)
+
 let () = 
-  let recipes = Array.create  ~len: 1_000_000 0 in
+  let recipes = Array.create  ~len: 21_000_000 0 in
   Array.set recipes 0 3;
   Array.set recipes 1 7;
   let e1 = 0 in
   let e2 = 1 in
-  let recipes, length, _, _ = process_n_times 700000 recipes 2 e1 e2 in
+  let recipes, length, _, _ = process_n_times 16_000_000 recipes 2 e1 e2 in
   Format.printf "nb of recipes = %d@." length;
 
   (* part 1 *)
@@ -62,4 +71,12 @@ let () =
   show_recipes_after_n recipes 18 10;
   show_recipes_after_n recipes 2018 10;
   show_recipes_after_n recipes 793061 10;
+
+  let recipe_string = string_of_int_arr recipes in
+  (* part 2 *)
+  scan_recipes_for_sequence recipe_string "51589";
+  scan_recipes_for_sequence recipe_string "01245";
+  scan_recipes_for_sequence recipe_string "92510";
+  scan_recipes_for_sequence recipe_string "59414";
+  scan_recipes_for_sequence recipe_string "793061"; (* puzzle input *)
 ()
