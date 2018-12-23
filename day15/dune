@@ -2,4 +2,5 @@
 ;;  dune exec ./day15/code.exe
 (executable
  (name code)
- (libraries core))
+ (libraries core)
+ (preprocess (pps ppx_jane)))
