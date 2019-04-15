@@ -68,6 +68,7 @@ let create_image_at_time max_size original_points time =
       Bigarray.Array1.create Int8_unsigned Bigarray.c_layout (width * height)
     in
     let name = Printf.sprintf "day10_ocaml/second%d.png" time in
+    Bigarray.Array1.fill image 0x0;
     create_image name (width, height) (top_offset, left_offset) image points
   else ()
 
